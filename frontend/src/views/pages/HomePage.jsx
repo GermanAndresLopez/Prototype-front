@@ -47,6 +47,30 @@ export const HomePage = () => {
     return controller;
   }, []);
 
+  const [savedInfras, setSavedInfras] = useState([]);
+  const [templatesRefreshKey, setTemplatesRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const loadSaved = async () => {
+      try {
+        const items = await provisionController.listInfrastructures();
+        setSavedInfras(items || []);
+      } catch (e) {
+        console.error('Error loading saved infrastructures', e);
+      }
+    };
+    loadSaved();
+  }, [provisionController]);
+
+  const refreshSavedInfras = async () => {
+    try {
+      const items = await provisionController.listInfrastructures();
+      setSavedInfras(items || []);
+    } catch (e) {
+      console.error('Error loading saved infrastructures', e);
+    }
+  };
+
   const templateController = React.useMemo(() => {
     const controller = new TemplateController();
     controller.subscribe((event) => {
@@ -77,7 +101,10 @@ export const HomePage = () => {
   const handleSaveTemplate = () => {
     const name = prompt('Ingresa el nombre del template:');
     if (name && infrastructure) {
-      templateController.saveTemplate(name, infrastructure);
+      templateController.saveTemplate(name, infrastructure).then(() => {
+        // trigger template manager to refresh
+        setTemplatesRefreshKey(k => k + 1);
+      });
     }
   };
 
@@ -126,7 +153,37 @@ export const HomePage = () => {
         )}
 
         <div className="content-section">
-          <TemplateManager onCloneTemplate={handleCloneTemplate} />
+          <TemplateManager templateController={templateController} onCloneTemplate={handleCloneTemplate} refreshKey={templatesRefreshKey} />
+        </div>
+
+        <div className="content-section">
+          <h2>Infraestructuras Guardadas</h2>
+          {savedInfras.length === 0 ? (
+            <div>No hay infraestructuras guardadas</div>
+          ) : (
+            <ul className="saved-infras-list">
+              {savedInfras.map(item => (
+                  <li key={item.id} className="saved-infra-item">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong>{item.id}</strong>
+                      <div>
+                        <button className="btn-secondary" onClick={() => setInfrastructure(item.infra)}>Ver</button>
+                        <button className="btn-danger" onClick={async () => {
+                          if (!confirm(`Eliminar infraestructura ${item.id}?`)) return;
+                          try {
+                            await provisionController.deleteInfrastructure(item.id);
+                            await refreshSavedInfras();
+                          } catch (err) {
+                            alert('Error eliminando infraestructura: ' + (err.message || err));
+                          }
+                        }}>Eliminar</button>
+                      </div>
+                    </div>
+                    <pre style={{ maxHeight: 120, overflow: 'auto' }}>{JSON.stringify(item.infra, null, 2)}</pre>
+                  </li>
+                ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

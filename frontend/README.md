@@ -39,6 +39,7 @@ Si el backend está en otra URL, edita `frontend/src/services/ApiService.js`
 - Selección visual de proveedores cloud
 - Selección dinámica de tipos de máquinas según el proveedor
 - Selección de regiones y tipos de almacenamiento
+ - Selección de regiones, tipos de almacenamiento y tamaño en GB (campo "Tamaño de Almacenamiento (GB)")
 - Visualización de infraestructura aprovisionada
 - Gestión de templates
 - Sistema de notificaciones

@@ -54,6 +54,48 @@ app.post('/api/v1/template', (req, res) => {
   }
 });
 
+app.get('/api/v1/template', (req, res) => {
+  try {
+    const items = controller.listTemplates();
+    res.json({ status: 'success', templates: items });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+app.get('/api/v1/infrastructures', (req, res) => {
+  try {
+    const items = controller.listInfrastructures();
+    res.json({ status: 'success', infrastructures: items });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
+app.delete('/api/v1/template/:name', (req, res) => {
+  try {
+    const { name } = req.params;
+    const out = controller.deleteTemplate(name);
+    res.json(out);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ status: 'error', message: err.message });
+  }
+});
+
+app.delete('/api/v1/infrastructure/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const out = controller.deleteInfrastructure(id);
+    res.json(out);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ status: 'error', message: err.message });
+  }
+});
+
 app.post('/api/v1/template/clone', async (req, res) => {
   try {
     const { name, overrides } = req.body;

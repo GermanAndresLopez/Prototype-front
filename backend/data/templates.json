@@ -1,0 +1,62 @@
+{
+  "01": {
+    "vm": {
+      "id": "vm-azure-1760976508711",
+      "estado": "provisionado",
+      "proveedor": "Azure",
+      "tamaño_maquina": "D4s_v3",
+      "resource_group": null,
+      "imagen": null,
+      "vcpus": 4,
+      "memoryGB": 16
+    },
+    "network": {
+      "region": "southeastasia",
+      "virtualNetwork": null,
+      "subnetName": null,
+      "networkSecurityGroup": null,
+      "publicIP": false,
+      "id": "net-azure-1760976508710"
+    },
+    "storage": {
+      "region": "southeastasia",
+      "diskSku": null,
+      "sizeGB": 40,
+      "managedDisk": false,
+      "id": "disk-azure-1760976508710"
+    },
+    "provider": "azure",
+    "timestamp": "2025-10-20T16:08:28.729Z"
+  },
+  "02": {
+    "vm": {
+      "id": "vm-aws-1760976917123",
+      "estado": "provisionado",
+      "proveedor": "AWS",
+      "instancia": "r5.large",
+      "region": "us-east-1",
+      "vcpus": 2,
+      "memoryGB": 16,
+      "memoryOptimization": false,
+      "diskOptimization": false,
+      "keyPairName": null
+    },
+    "network": {
+      "region": "us-east-1",
+      "vpcId": null,
+      "subnet": null,
+      "idSecurityGroup": null,
+      "publicIP": false,
+      "id": "net-aws-1760976917121"
+    },
+    "storage": {
+      "region": "us-east-1",
+      "volumeType": null,
+      "sizeGB": 40,
+      "encrypted": false,
+      "id": "disk-aws-1760976917122"
+    },
+    "provider": "aws",
+    "timestamp": "2025-10-20T16:15:17.142Z"
+  }
+}

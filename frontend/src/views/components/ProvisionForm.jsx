@@ -113,7 +113,7 @@ export const ProvisionForm = ({ onSubmit, isLoading, config }) => {
           <select
             className="form-select"
             value={formData.machineType}
-            onChange={(e) => setFormData({ ...formData, machineType: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, machineType: e.target.value, choice: e.target.value })}
             disabled={!formData.machineCategory}
           >
             <option value="">Seleccione un tipo</option>
@@ -157,6 +157,19 @@ export const ProvisionForm = ({ onSubmit, isLoading, config }) => {
               <option key={storage} value={storage}>{storage}</option>
             ))}
           </select>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Tamaño de Almacenamiento (GB)</label>
+          <input
+            type="number"
+            min="1"
+            className="form-input"
+            value={formData.specs.size || ''}
+            onChange={(e) => handleSpecChange('size', e.target.value === '' ? '' : Number(e.target.value))}
+            placeholder="Ej: 30"
+            disabled={!formData.provider}
+          />
         </div>
 
         <div className="form-group">

@@ -4,11 +4,65 @@ const AzureCloudBuilder = require('../builders/azureCloudBuilder');
 const GCPCloudBuilder = require('../builders/gcpCloudBuilder');
 const OnPremiseCloudBuilder = require('../builders/onPremiseCloudBuilder');
 
+const fs = require('fs');
+const path = require('path');
+
 class ProvisionController {
   constructor(factories) {
     this.factories = factories;
     this.director = new ProvisioningDirector();
-    this.templates = {}; // in-memory templates
+    this.templates = {};
+    this.dataDir = path.resolve(__dirname, '..', '..', 'data');
+    this.templatesFile = path.join(this.dataDir, 'templates.json');
+    this._loadTemplatesFromDisk();
+    this.infrastructuresFile = path.join(this.dataDir, 'infrastructures.json');
+    this.infrastructures = {};
+    this._loadInfrastructuresFromDisk();
+  }
+
+  _loadTemplatesFromDisk() {
+    try {
+      if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+      if (!fs.existsSync(this.templatesFile)) {
+        fs.writeFileSync(this.templatesFile, JSON.stringify({}), 'utf8');
+      }
+      const raw = fs.readFileSync(this.templatesFile, 'utf8');
+      this.templates = raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      console.error('Error loading templates from disk:', err);
+      this.templates = {};
+    }
+  }
+
+  _saveTemplatesToDisk() {
+    try {
+      if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+      fs.writeFileSync(this.templatesFile, JSON.stringify(this.templates, null, 2), 'utf8');
+    } catch (err) {
+      console.error('Error saving templates to disk:', err);
+    }
+  }
+
+  _loadInfrastructuresFromDisk() {
+    try {
+      if (!fs.existsSync(this.infrastructuresFile)) {
+        fs.writeFileSync(this.infrastructuresFile, JSON.stringify({}), 'utf8');
+      }
+      const raw = fs.readFileSync(this.infrastructuresFile, 'utf8');
+      this.infrastructures = raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      console.error('Error loading infrastructures from disk:', err);
+      this.infrastructures = {};
+    }
+  }
+
+  _saveInfrastructuresToDisk() {
+    try {
+      if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+      fs.writeFileSync(this.infrastructuresFile, JSON.stringify(this.infrastructures, null, 2), 'utf8');
+    } catch (err) {
+      console.error('Error saving infrastructures to disk:', err);
+    }
   }
 
   _selectBuilder(provider) {
@@ -35,7 +89,18 @@ class ProvisionController {
     await this.director.construct({ choice, builderType, specs });
     const result = this.director.getResult();
     this.lastResult = result;
+    try {
+      const key = 'infra-' + Date.now();
+      this.infrastructures[key] = result;
+      this._saveInfrastructuresToDisk();
+    } catch (e) {
+      console.error('Error persisting infrastructure:', e);
+    }
     return result;
+  }
+
+  listInfrastructures() {
+    return Object.keys(this.infrastructures).map(k => ({ id: k, infra: this.infrastructures[k] }));
   }
 
   saveTemplate(name, infra) {
@@ -43,19 +108,60 @@ class ProvisionController {
     const toSave = infra || this.lastResult;
     if(!toSave) throw new Error('no infra to save');
     this.templates[name] = toSave;
+    this._saveTemplatesToDisk();
     return { status: 'ok', saved: name };
+  }
+
+  listTemplates() {
+    
+    return Object.keys(this.templates).map(name => ({ name, infra: this.templates[name] }));
   }
 
   async cloneTemplate(name, overrides) {
     const template = this.templates[name];
     if(!template) throw new Error('template not found: ' + name);
-    const vmClone = template.vm.clone();
-    const netClone = template.network.clone();
-    const storageClone = template.storage.clone();
+   
+    const cloneEntity = (entity) => {
+      if (!entity) return null;
+      if (typeof entity.clone === 'function') return entity.clone();
+      // plain object -> deep copy
+      return JSON.parse(JSON.stringify(entity));
+    };
+
+    const vmClone = cloneEntity(template.vm);
+    const netClone = cloneEntity(template.network);
+    const storageClone = cloneEntity(template.storage);
+
     Object.assign(vmClone, overrides.vm || {});
     Object.assign(netClone, overrides.network || {});
     Object.assign(storageClone, overrides.storage || {});
-    return { status: 'success', vm: vmClone, network: netClone, storage: storageClone };
+
+    const result = { status: 'success', vm: vmClone, network: netClone, storage: storageClone };
+
+    try {
+      const key = 'infra-' + Date.now();
+      this.infrastructures[key] = { vm: vmClone, network: netClone, storage: storageClone };
+      this._saveInfrastructuresToDisk();
+      result.id = key;
+    } catch (e) {
+      console.error('Error persisting cloned infrastructure:', e);
+    }
+
+    return result;
+  }
+
+  deleteTemplate(name) {
+    if (!this.templates[name]) throw new Error('template not found: ' + name);
+    delete this.templates[name];
+    this._saveTemplatesToDisk();
+    return { status: 'ok', deleted: name };
+  }
+
+  deleteInfrastructure(id) {
+    if (!this.infrastructures[id]) throw new Error('infrastructure not found: ' + id);
+    delete this.infrastructures[id];
+    this._saveInfrastructuresToDisk();
+    return { status: 'ok', deleted: id };
   }
 }
 

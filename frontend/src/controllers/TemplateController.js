@@ -67,4 +67,25 @@ export class TemplateController {
       throw error;
     }
   }
+
+  async listTemplates() {
+    try {
+      const response = await this.apiService.get('/template');
+      if (response && response.templates) return response.templates;
+      return [];
+    } catch (error) {
+      this.notify({ type: 'error', message: error.message || 'Error al listar templates' });
+      return [];
+    }
+  }
+
+  async deleteTemplate(name) {
+    try {
+      const response = await this.apiService.request(`/template/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      return response;
+    } catch (error) {
+      this.notify({ type: 'error', message: error.message || 'Error al eliminar template' });
+      throw error;
+    }
+  }
 }

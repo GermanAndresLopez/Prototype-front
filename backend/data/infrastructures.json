@@ -1,0 +1,31 @@
+{
+  "infra-1760976982707": {
+    "vm": {
+      "id": "vm-aws-1760976917123",
+      "estado": "provisionado",
+      "proveedor": "AWS",
+      "instancia": "r5.large",
+      "region": "us-east-1",
+      "vcpus": 2,
+      "memoryGB": 16,
+      "memoryOptimization": false,
+      "diskOptimization": false,
+      "keyPairName": null
+    },
+    "network": {
+      "region": "us-east-1",
+      "vpcId": null,
+      "subnet": null,
+      "idSecurityGroup": null,
+      "publicIP": false,
+      "id": "net-aws-1760976917121"
+    },
+    "storage": {
+      "region": "us-east-1",
+      "volumeType": null,
+      "sizeGB": 80,
+      "encrypted": false,
+      "id": "disk-aws-1760976917122"
+    }
+  }
+}

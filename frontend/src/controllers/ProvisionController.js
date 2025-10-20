@@ -51,4 +51,24 @@ export class ProvisionController {
       throw error;
     }
   }
+
+  async listInfrastructures() {
+    try {
+      const response = await this.apiService.get('/infrastructures');
+      return response.infrastructures || [];
+    } catch (err) {
+      this.notify({ type: 'error', message: err.message || 'Error al listar infraestructuras' });
+      return [];
+    }
+  }
+
+  async deleteInfrastructure(id) {
+    try {
+      const response = await this.apiService.request(`/infrastructure/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      return response;
+    } catch (err) {
+      this.notify({ type: 'error', message: err.message || 'Error al eliminar infrastructure' });
+      throw err;
+    }
+  }
 }

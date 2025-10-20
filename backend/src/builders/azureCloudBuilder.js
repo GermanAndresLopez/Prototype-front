@@ -6,7 +6,24 @@ class AzureCloudBuilder extends ICloudBuilder {
     this.reset();
   }
   reset(){ this.networkSpec={}; this.storageSpec={}; this.vmSpec={}; this.network=null; this.storage=null; this.vm=null; }
-  setFlavor(choice){ this.vmSpec.tamaño_maquina = choice; }
+  setFlavor(choice){ 
+    this.vmSpec.tamaño_maquina = choice;
+    try {
+      const pd = require('../core/provisioningDirector');
+      const types = pd.MACHINE_TYPES.AZURE || {};
+      for (const family of Object.keys(types)){
+        const map = types[family];
+        if (map && map[choice]){
+          const { vcpu, ram } = map[choice];
+          this.vmSpec.vcpus = vcpu; this.vmSpec.memoryGB = ram;
+          // default storage size: 10 * RAM (GB), minimum 30GB
+          const defaultSize = Math.max(30, Math.ceil(ram * 10));
+          if (this.storageSpec.size == null && this.storageSpec.sizeGB == null) this.storageSpec.size = defaultSize;
+          break;
+        }
+      }
+    } catch(e) {}
+  }
   setNetworkSpec(s){ this.networkSpec = Object.assign({}, this.networkSpec, s); }
   setStorageSpec(s){ this.storageSpec = Object.assign({}, this.storageSpec, s); }
   setVMSpec(s){ this.vmSpec = Object.assign({}, this.vmSpec, s); }
@@ -16,6 +33,25 @@ class AzureCloudBuilder extends ICloudBuilder {
     this.vmSpec.region = this.vmSpec.region || (this.network && this.network.region) || (this.storage && this.storage.region);
     this.vmSpec.networkId = this.network && this.network.id;
     this.vmSpec.diskId = this.storage && this.storage.id;
+    // Map flavor choice to vcpus and memoryGB if available
+    try {
+      const ProvisioningDirector = require('../core/provisioningDirector');
+      const choice = this.vmSpec.tamaño_maquina || this.vmSpec.flavor || this.vmSpec.machine_type || this.vmSpec.instancia;
+      if (choice) {
+        // Search in AZURE machine types
+        const types = ProvisioningDirector.MACHINE_TYPES.AZURE || {};
+        for (const family of Object.keys(types)) {
+          const map = types[family];
+          if (map && map[choice]) {
+            const { vcpu, ram } = map[choice];
+            this.vmSpec.vcpus = vcpu; this.vmSpec.memoryGB = ram;
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      // ignore lookup errors
+    }
     this.vm = await this.factory.crearVM(this.vmSpec);
   }
   getResult(){ return { status:'success', vm:this.vm, network:this.network, storage:this.storage }; }
