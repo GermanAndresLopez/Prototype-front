@@ -1,0 +1,36 @@
+### AWS Standard
+POST http://localhost:3000/api/v1/provision
+Content-Type: application/json
+
+{
+  "provider": "aws",
+  "builderType": "standard",
+  "choice": "t3.medium",
+  "specs": {
+    "network": { "region": "us-east-1", "vpcId":"vpc-1", "subnet":"s1" },
+    "storage": { "region": "us-east-1", "sizeGB": 20, "volumeType":"gp3" },
+    "vm": { "keyPairName": "key-aws" }
+  }
+}
+
+### Save template (use response vm as template)
+POST http://localhost:3000/api/v1/template
+Content-Type: application/json
+
+{
+  "name": "aws-small",
+  "infra": null
+}
+
+### Clone template and override region
+POST http://localhost:3000/api/v1/template/clone
+Content-Type: application/json
+
+{
+  "name": "aws-small",
+  "overrides": {
+    "vm": { "region": "us-west-2" },
+    "network": { "region": "us-west-2" },
+    "storage": { "region": "us-west-2" }
+  }
+}
