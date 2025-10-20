@@ -18,6 +18,48 @@ class ProvisionController {
     this.infrastructuresFile = path.join(this.dataDir, 'infrastructures.json');
     this.infrastructures = {};
     this._loadInfrastructuresFromDisk();
+    this.logsFile = path.join(this.dataDir, 'logs.json');
+    this.logs = {};
+    this._loadLogsFromDisk();
+  }
+
+  _loadLogsFromDisk() {
+    try {
+      if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+      if (!fs.existsSync(this.logsFile)) {
+        fs.writeFileSync(this.logsFile, JSON.stringify({}), 'utf8');
+      }
+      const raw = fs.readFileSync(this.logsFile, 'utf8');
+      this.logs = raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      console.error('Error loading logs from disk:', err);
+      this.logs = {};
+    }
+  }
+
+  _saveLogsToDisk() {
+    try {
+      if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+      fs.writeFileSync(this.logsFile, JSON.stringify(this.logs, null, 2), 'utf8');
+    } catch (err) {
+      console.error('Error saving logs to disk:', err);
+    }
+  }
+
+  _addLog(entry) {
+    try {
+      const id = 'log-' + Date.now();
+      const logEntry = Object.assign({ id, timestamp: new Date().toISOString() }, entry);
+      this.logs[id] = logEntry;
+      this._saveLogsToDisk();
+      return logEntry;
+    } catch (err) {
+      console.error('Error adding log:', err);
+    }
+  }
+
+  listLogs() {
+    return Object.keys(this.logs).map(k => this.logs[k]).sort((a,b) => (a.timestamp < b.timestamp ? 1 : -1));
   }
 
   _loadTemplatesFromDisk() {
@@ -91,12 +133,19 @@ class ProvisionController {
     this.lastResult = result;
     try {
       const key = 'infra-' + Date.now();
-      this.infrastructures[key] = result;
+      // include provider in persisted infra so UI can show provider later
+      const persist = Object.assign({}, result, { provider });
+      this.infrastructures[key] = persist;
       this._saveInfrastructuresToDisk();
+      // add audit log entry
+      this._addLog({ action: 'provision', provider, infraId: key, details: { vm: result.vm, network: result.network, storage: result.storage } });
+      // return result enriched with provider as well
+      return Object.assign({}, result, { provider });
     } catch (e) {
       console.error('Error persisting infrastructure:', e);
+      this._addLog({ action: 'provision', provider, infraId: null, details: { vm: result.vm, network: result.network, storage: result.storage, error: e.message } });
+      return Object.assign({}, result, { provider });
     }
-    return result;
   }
 
   listInfrastructures() {
@@ -136,13 +185,19 @@ class ProvisionController {
     Object.assign(netClone, overrides.network || {});
     Object.assign(storageClone, overrides.storage || {});
 
-    const result = { status: 'success', vm: vmClone, network: netClone, storage: storageClone };
+  const providerFromTemplate = template.provider || (template.vm && (template.vm.proveedor || template.vm.provider)) || null;
+  const providerFromOverrides = overrides.provider || null;
+  const providerToUse = providerFromOverrides || providerFromTemplate || null;
+
+  const result = { status: 'success', vm: vmClone, network: netClone, storage: storageClone, provider: providerToUse };
 
     try {
-      const key = 'infra-' + Date.now();
-      this.infrastructures[key] = { vm: vmClone, network: netClone, storage: storageClone };
+  const key = 'infra-' + Date.now();
+  this.infrastructures[key] = { vm: vmClone, network: netClone, storage: storageClone, provider: providerToUse };
       this._saveInfrastructuresToDisk();
       result.id = key;
+      // log clone action
+      this._addLog({ action: 'clone-template', template: name, infraId: key, provider: providerToUse, overrides });
     } catch (e) {
       console.error('Error persisting cloned infrastructure:', e);
     }
@@ -162,6 +217,17 @@ class ProvisionController {
     delete this.infrastructures[id];
     this._saveInfrastructuresToDisk();
     return { status: 'ok', deleted: id };
+  }
+
+  updateInfrastructureState(id, newState) {
+    const infra = this.infrastructures[id];
+    if (!infra) throw new Error('infrastructure not found: ' + id);
+    if (infra.vm) {
+      infra.vm.estado = newState;
+      this._saveInfrastructuresToDisk();
+      return { status: 'ok', id, state: newState };
+    }
+    throw new Error('infrastructure has no vm to update');
   }
 }
 

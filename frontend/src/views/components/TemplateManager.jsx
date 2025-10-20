@@ -23,10 +23,28 @@ export const TemplateManager = ({ templateController, onCloneTemplate, refreshKe
   };
 
   useEffect(() => {
-    // when selected template changes, reset overrides
-    setOverridesJSON('');
-    setOverridesObj({});
+    // when selected template changes, populate overrides with the template infra JSON
     setJsonError('');
+    if (selected) {
+      const tpl = templates.find(t => t.name === selected);
+      if (tpl && tpl.infra) {
+        const text = JSON.stringify(tpl.infra, null, 2);
+        setOverridesJSON(text);
+        try {
+          setOverridesObj(JSON.parse(text));
+          setJsonError('');
+        } catch (e) {
+          setOverridesObj({});
+          setJsonError(e.message);
+        }
+      } else {
+        setOverridesJSON('');
+        setOverridesObj({});
+      }
+    } else {
+      setOverridesJSON('');
+      setOverridesObj({});
+    }
   }, [selected]);
 
   const handleClone = () => {
@@ -84,16 +102,11 @@ export const TemplateManager = ({ templateController, onCloneTemplate, refreshKe
         {jsonError && <div className="form-error">JSON inválido: {jsonError}</div>}
       </div>
 
-      <div className="form-group">
-        <label className="form-label">Preview del Template Seleccionado</label>
-        <pre className="template-preview">
-          {selected ? JSON.stringify(templates.find(t => t.name === selected)?.infra, null, 2) : 'Ningún template seleccionado'}
-        </pre>
-      </div>
+      {/* preview removed: selecting a template populates the overrides JSON directly */}
 
       <div style={{ display: 'flex', gap: '8px' }}>
         <button className="btn-secondary" onClick={handleClone} disabled={!selected || !!jsonError}>Clonar Template</button>
-        <button className="btn-danger" onClick={async () => {
+        <button className="btn-secondary" onClick={async () => {
           if (!selected) return;
           if (!confirm(`Eliminar template "${selected}"? Esta acción no se puede deshacer.`)) return;
           try {

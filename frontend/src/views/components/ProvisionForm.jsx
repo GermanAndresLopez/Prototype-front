@@ -32,14 +32,22 @@ export const ProvisionForm = ({ onSubmit, isLoading, config }) => {
     if (formData.provider && formData.machineCategory && config) {
       const providerKey = formData.provider.toUpperCase();
       const types = config.machineTypes?.[providerKey]?.[formData.machineCategory] || {};
-      setMachineTypes(Object.keys(types));
-      setFormData(prev => ({ ...prev, machineType: '' }));
+      const keys = Object.keys(types);
+      setMachineTypes(keys);
+      // auto-select the first machine type in the category so a choice is always provided
+      const first = keys.length > 0 ? keys[0] : '';
+      setFormData(prev => ({ ...prev, machineType: first, choice: first }));
     }
   }, [formData.machineCategory, formData.provider, config]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    // ensure a choice is present (use machineType as fallback)
+    const payload = { ...formData };
+    if (!payload.choice) payload.choice = payload.machineType || '';
+    // ensure specs.name exists (may be empty string)
+    payload.specs = Object.assign({}, payload.specs, { name: payload.specs?.name || null });
+    onSubmit(payload);
   };
 
   const handleProviderChange = (provider) => {
@@ -81,13 +89,17 @@ export const ProvisionForm = ({ onSubmit, isLoading, config }) => {
 
       <div className="form-group">
         <label className="form-label">Opción de Infraestructura</label>
-        <input
-          type="text"
-          className="form-input"
-          value={formData.choice}
-          onChange={(e) => setFormData({ ...formData, choice: e.target.value })}
-          placeholder="Ej: web, database, storage"
-        />
+          <select
+            className="form-input"
+            value={formData.specs.option || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, specs: { ...prev.specs, option: e.target.value } }))}>
+            <option value="">-- Seleccione una opción --</option>
+            <option value="web">Web</option>
+            <option value="database">Database</option>
+            <option value="storage">Storage</option>
+            <option value="cache">Cache</option>
+            <option value="worker">Worker</option>
+          </select>
       </div>
 
       <div className="specs-section">

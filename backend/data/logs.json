@@ -1,0 +1,79 @@
+{
+  "log-1760989935549": {
+    "id": "log-1760989935549",
+    "timestamp": "2025-10-20T19:52:15.549Z",
+    "action": "provision",
+    "provider": "aws",
+    "infraId": "infra-1760989935546",
+    "details": {
+      "vm": {
+        "id": "vm-aws-1760989935546",
+        "estado": "running",
+        "proveedor": "AWS",
+        "name": "prueba1",
+        "instancia": "m5.xlarge",
+        "region": "us-west-2",
+        "vcpus": 4,
+        "memoryGB": 16,
+        "memoryOptimization": false,
+        "diskOptimization": false,
+        "keyPairName": null
+      },
+      "network": {
+        "region": "us-west-2",
+        "vpcId": null,
+        "subnet": null,
+        "idSecurityGroup": null,
+        "publicIP": false,
+        "id": "net-aws-1760989935544"
+      },
+      "storage": {
+        "region": "us-west-2",
+        "volumeType": null,
+        "sizeGB": 48,
+        "encrypted": false,
+        "id": "disk-aws-1760989935544"
+      }
+    }
+  },
+  "log-1760989959477": {
+    "id": "log-1760989959477",
+    "timestamp": "2025-10-20T19:52:39.477Z",
+    "action": "clone-template",
+    "template": "01",
+    "infraId": "infra-1760989959473",
+    "provider": "aws",
+    "overrides": {
+      "vm": {
+        "id": "vm-aws-1760989935546",
+        "estado": "running",
+        "proveedor": "AWS",
+        "name": "prueba1",
+        "instancia": "m5.xlarge",
+        "region": "us-west-2",
+        "vcpus": 4,
+        "memoryGB": 16,
+        "memoryOptimization": false,
+        "diskOptimization": false,
+        "keyPairName": null
+      },
+      "network": {
+        "region": "us-west-2",
+        "vpcId": null,
+        "subnet": null,
+        "idSecurityGroup": null,
+        "publicIP": false,
+        "id": "net-aws-1760989935544"
+      },
+      "storage": {
+        "region": "us-west-2",
+        "volumeType": null,
+        "sizeGB": 80,
+        "encrypted": false,
+        "id": "disk-aws-1760989935544"
+      },
+      "provider": "aws",
+      "timestamp": "2025-10-20T19:52:15.563Z"
+    }
+  }
+}

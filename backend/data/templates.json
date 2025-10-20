@@ -1,42 +1,46 @@
 {
   "01": {
     "vm": {
-      "id": "vm-azure-1760976508711",
-      "estado": "provisionado",
-      "proveedor": "Azure",
-      "tamaño_maquina": "D4s_v3",
-      "resource_group": null,
-      "imagen": null,
+      "id": "vm-aws-1760989935546",
+      "estado": "running",
+      "proveedor": "AWS",
+      "name": "prueba1",
+      "instancia": "m5.xlarge",
+      "region": "us-west-2",
       "vcpus": 4,
-      "memoryGB": 16
+      "memoryGB": 16,
+      "memoryOptimization": false,
+      "diskOptimization": false,
+      "keyPairName": null
     },
     "network": {
-      "region": "southeastasia",
-      "virtualNetwork": null,
-      "subnetName": null,
-      "networkSecurityGroup": null,
+      "region": "us-west-2",
+      "vpcId": null,
+      "subnet": null,
+      "idSecurityGroup": null,
       "publicIP": false,
-      "id": "net-azure-1760976508710"
+      "id": "net-aws-1760989935544"
     },
     "storage": {
-      "region": "southeastasia",
-      "diskSku": null,
-      "sizeGB": 40,
-      "managedDisk": false,
-      "id": "disk-azure-1760976508710"
+      "region": "us-west-2",
+      "volumeType": null,
+      "sizeGB": 48,
+      "encrypted": false,
+      "id": "disk-aws-1760989935544"
     },
-    "provider": "azure",
-    "timestamp": "2025-10-20T16:08:28.729Z"
+    "provider": "aws",
+    "timestamp": "2025-10-20T19:52:15.563Z"
   },
-  "02": {
+  "testclone": {
     "vm": {
-      "id": "vm-aws-1760976917123",
-      "estado": "provisionado",
+      "id": "vm-aws-1760989065552",
+      "estado": "running",
       "proveedor": "AWS",
-      "instancia": "r5.large",
+      "name": "test",
+      "instancia": "r5.xlarge",
       "region": "us-east-1",
-      "vcpus": 2,
-      "memoryGB": 16,
+      "vcpus": 4,
+      "memoryGB": 32,
       "memoryOptimization": false,
       "diskOptimization": false,
       "keyPairName": null
@@ -47,16 +51,48 @@
       "subnet": null,
       "idSecurityGroup": null,
       "publicIP": false,
-      "id": "net-aws-1760976917121"
+      "id": "net-aws-1760989065551"
     },
     "storage": {
       "region": "us-east-1",
       "volumeType": null,
-      "sizeGB": 40,
+      "sizeGB": 39,
       "encrypted": false,
-      "id": "disk-aws-1760976917122"
+      "id": "disk-aws-1760989065551"
     },
     "provider": "aws",
-    "timestamp": "2025-10-20T16:15:17.142Z"
+    "timestamp": "2025-10-20T19:37:45.564Z"
+  },
+  "02": {
+    "vm": {
+      "id": "vm-aws-1760989466455",
+      "estado": "running",
+      "proveedor": "AWS",
+      "name": "test2",
+      "instancia": "r5.2xlarge",
+      "region": "ap-southeast-1",
+      "vcpus": 8,
+      "memoryGB": 64,
+      "memoryOptimization": false,
+      "diskOptimization": false,
+      "keyPairName": null
+    },
+    "network": {
+      "region": "ap-southeast-1",
+      "vpcId": null,
+      "subnet": null,
+      "idSecurityGroup": null,
+      "publicIP": false,
+      "id": "net-aws-1760989466453"
+    },
+    "storage": {
+      "region": "ap-southeast-1",
+      "volumeType": null,
+      "sizeGB": 40,
+      "encrypted": false,
+      "id": "disk-aws-1760989466454"
+    },
+    "provider": "aws",
+    "timestamp": "2025-10-20T19:44:26.464Z"
   }
 }

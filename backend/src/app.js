@@ -74,6 +74,16 @@ app.get('/api/v1/infrastructures', (req, res) => {
   }
 });
 
+app.get('/api/v1/logs', (req, res) => {
+  try {
+    const items = controller.listLogs();
+    res.json({ status: 'success', logs: items });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+});
+
 app.delete('/api/v1/template/:name', (req, res) => {
   try {
     const { name } = req.params;
@@ -89,6 +99,18 @@ app.delete('/api/v1/infrastructure/:id', (req, res) => {
   try {
     const { id } = req.params;
     const out = controller.deleteInfrastructure(id);
+    res.json(out);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ status: 'error', message: err.message });
+  }
+});
+
+app.patch('/api/v1/infrastructure/:id/state', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { state } = req.body;
+    const out = controller.updateInfrastructureState(id, state);
     res.json(out);
   } catch (err) {
     console.error(err);

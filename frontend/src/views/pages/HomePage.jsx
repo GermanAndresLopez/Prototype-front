@@ -12,6 +12,8 @@ export const HomePage = () => {
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [config, setConfig] = useState(null);
+  const [showLogs, setShowLogs] = useState(false);
+  const [logs, setLogs] = useState([]);
 
   const configService = React.useMemo(() => new ConfigService(), []);
 
@@ -29,6 +31,15 @@ export const HomePage = () => {
     };
     loadConfig();
   }, [configService]);
+
+  const loadLogs = async () => {
+    try {
+      const l = await provisionController.listLogs();
+      setLogs(l || []);
+    } catch (e) {
+      console.error('Error loading logs', e);
+    }
+  };
 
   const provisionController = React.useMemo(() => {
     const controller = new ProvisionController();
@@ -130,6 +141,37 @@ export const HomePage = () => {
       />
 
       <div className="main-content">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+          <button className="btn-secondary" onClick={async () => { setShowLogs(s => !s); if (!showLogs) await loadLogs(); }}>
+            Historial
+          </button>
+        </div>
+
+        {showLogs && (
+          <div className="content-section">
+            <h2>Historial de Acciones</h2>
+            {logs.length === 0 ? (
+              <div>No hay registros</div>
+            ) : (
+              <ul className="logs-list">
+                {logs.map(l => (
+                  <li key={l.id} className="log-item">
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div>
+                        <strong>{l.action}</strong> — {l.provider || l.details?.provider || '—'}
+                        <div style={{ fontSize: 12, color: '#666' }}>{new Date(l.timestamp).toLocaleString()}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div>ID: {l.infraId || l.id}</div>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 13, whiteSpace: 'pre-wrap' }}>{JSON.stringify(l.details || l.overrides || {}, null, 2)}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
         <div className="content-section">
           <h2>Nueva Infraestructura</h2>
           {config ? (
@@ -161,14 +203,36 @@ export const HomePage = () => {
           {savedInfras.length === 0 ? (
             <div>No hay infraestructuras guardadas</div>
           ) : (
-            <ul className="saved-infras-list">
-              {savedInfras.map(item => (
-                  <li key={item.id} className="saved-infra-item">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <strong>{item.id}</strong>
+            <div className="saved-infras-grid">
+              {savedInfras.map(item => {
+                const infra = item.infra || {};
+                const vm = infra.vm || {};
+                const storage = infra.storage || {};
+                // helpers
+                const providerLabel = infra.provider || vm.proveedor || vm.provider || 'Unknown';
+                const vmName = vm.name || vm.instancia || vm.machine_type || vm.tamaño_maquina || 'VM';
+                const vmType = vm.instancia || vm.machine_type || vm.tamaño_maquina || '';
+                const vcpus = vm.vcpus || vm.vcpu || '—';
+                const memory = vm.memoryGB || vm.ram || '—';
+                const storageSize = storage.size || storage.sizeGB || storage.disco || '—';
+
+                return (
+                  <div key={item.id} className="infra-card">
+                    <div className="infra-card-header">
                       <div>
-                        <button className="btn-secondary" onClick={() => setInfrastructure(item.infra)}>Ver</button>
-                        <button className="btn-danger" onClick={async () => {
+                        <strong>{vmName}</strong>
+                        <div className="infra-provider">{providerLabel}</div>
+                      </div>
+                      
+                    </div>
+                    <div className="infra-card-body">
+                      <div>Tipo: {vmType}</div>
+                      <div>vCPUs: {vcpus}</div>
+                      <div>RAM: {memory} GB</div>
+                      <div>Almacenamiento: {storageSize} GB</div>
+                    </div>
+                    <div className="infra-actions">
+                        <button className="btn-secondary" onClick={async () => {
                           if (!confirm(`Eliminar infraestructura ${item.id}?`)) return;
                           try {
                             await provisionController.deleteInfrastructure(item.id);
@@ -178,11 +242,10 @@ export const HomePage = () => {
                           }
                         }}>Eliminar</button>
                       </div>
-                    </div>
-                    <pre style={{ maxHeight: 120, overflow: 'auto' }}>{JSON.stringify(item.infra, null, 2)}</pre>
-                  </li>
-                ))}
-            </ul>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

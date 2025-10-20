@@ -62,12 +62,32 @@ export class ProvisionController {
     }
   }
 
+  async listLogs() {
+    try {
+      const response = await this.apiService.get('/logs');
+      return response.logs || [];
+    } catch (err) {
+      this.notify({ type: 'error', message: err.message || 'Error al listar logs' });
+      return [];
+    }
+  }
+
   async deleteInfrastructure(id) {
     try {
       const response = await this.apiService.request(`/infrastructure/${encodeURIComponent(id)}`, { method: 'DELETE' });
       return response;
     } catch (err) {
       this.notify({ type: 'error', message: err.message || 'Error al eliminar infrastructure' });
+      throw err;
+    }
+  }
+
+  async updateInfrastructureState(id, state) {
+    try {
+      const response = await this.apiService.request(`/infrastructure/${encodeURIComponent(id)}/state`, { method: 'PATCH', body: JSON.stringify({ state }) });
+      return response;
+    } catch (err) {
+      this.notify({ type: 'error', message: err.message || 'Error al actualizar estado' });
       throw err;
     }
   }
